@@ -31,7 +31,18 @@ import { DataTableFacetedFilter } from "@/components/datatable/FactedFilers";
 import { DataTableViewOptions } from "@/components/datatable/ColumnToggle";
 import { Button } from "@/components/ui/button";
 import { mkConfig, generateCsv, download } from "export-to-csv";
-import { DownloadIcon } from "lucide-react";
+import { Delete, DownloadIcon, MoreHorizontal, TrashIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
+import DeleteTransactionDialog from "./DeleteTransactionDialog";
 
 interface Props {
   from: Date;
@@ -80,7 +91,7 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
         month: "2-digit",
         day: "2-digit",
       });
-      return <div className=" text-muted-foreground">{formattedDate}</div>;
+      return <div className="text-muted-foreground">{formattedDate}</div>;
     },
   },
   {
@@ -95,7 +106,7 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
       <div className="flex gap-2 capitalize">
         <div
           className={cn(
-            "capitalize rouned-lg text-center p-2",
+            "capitalize rounded-lg text-center p-2",
             row.original.type === "income" &&
               "bg-emerald-400/10 text-emerald-500",
             row.original.type === "expense" && "bg-red-400/10 text-red-500"
@@ -116,6 +127,11 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
         {row.original.formattedAmount}
       </p>
     ),
+  },
+  {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => <RowActions transaction={row.original} />,
   },
 ];
 
@@ -293,3 +309,41 @@ function TransactionTable({ from, to }: Props) {
 }
 
 export default TransactionTable;
+
+function RowActions({ transaction }: { transaction: TransactionHistoryRow }) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  return (
+    <>
+      <DeleteTransactionDialog
+        open={showDeleteDialog}
+        setOpen={setShowDeleteDialog}
+        transactionId={transaction.id}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open Menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          className="bg-background dark:bg-zinc-900 border p-2 rounded-md z-50 shadow-md"
+        >
+          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="flex items-center gap-2 cursor-pointer"
+            onSelect={() => {
+              setShowDeleteDialog((prev) => !prev);
+            }}
+          >
+            <TrashIcon className="h-4 w-4 text-muted-foreground" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}
